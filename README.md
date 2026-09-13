@@ -16,7 +16,7 @@ Netlify, or your own server) instead of being tied to the B12 platform.
 
 ```bash
 npm install
-cp .env.example .env   # then fill in your Supabase project URL + anon key
+cp .env.example .env   # fill in your Supabase project URL + anon key and your admin email list
 npm run dev
 ```
 
@@ -35,11 +35,9 @@ The dev server runs at `http://localhost:5173`.
    ```
    VITE_SUPABASE_URL=https://your-project.supabase.co
    VITE_SUPABASE_ANON_KEY=your-anon-key
+   VITE_ADMIN_EMAILS=theyaadiexplorer@gmail.com
    ```
-5. The `admins` table is seeded with `theyaadiexplorer@gmail.com` as the initial admin — that email needs to
-   sign up through `/signup` once so a matching `auth.users` row exists, after which `/admin/dashboard` will
-   recognize it.
-
+   5. The app checks admin access from `VITE_ADMIN_EMAILS` rather than reading the `admins` table directly in the browser. Add your admin email(s) there before logging in to `/admin/login`.
 ### Keeping the tour catalog in sync
 
 `src/data/tours.ts` is the single source of truth for the 43 tours (used by the `/tours` page, the homepage

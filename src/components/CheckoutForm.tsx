@@ -111,27 +111,11 @@ export default function CheckoutForm() {
     setError('')
 
     try {
-      // Update payment status to mark deposit as paid
-      const { error: updateError } = await supabase
-        .from('payments')
-        .update({
-          payment_status: 'deposit_paid',
-          payment_method: paymentMethod,
-        })
-        .eq('id', payment.id)
-
-      if (updateError) throw updateError
-
-      // Update booking status to confirmed
-      const { error: bookingError } = await supabase
-        .from('bookings')
-        .update({ status: 'confirmed' })
-        .eq('id', booking.id)
-
-      if (bookingError) throw bookingError
-
-      setPaymentProcessed(true)
-      setPayment({ ...payment, payment_status: 'deposit_paid' })
+      // Direct client-side payment confirmation is disabled.
+      // Final payment state must be set by a trusted server-side payment processor or webhook.
+      throw new Error(
+        'Live payment confirmation is disabled until a secure backend payment flow is configured. This checkout must be processed by a trusted payment provider.'
+      )
     } catch (err: any) {
       setError(err.message || 'Payment processing failed')
     } finally {
@@ -222,6 +206,10 @@ export default function CheckoutForm() {
           {error}
         </div>
       )}
+
+      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        Secure payment processing is not enabled in the browser. Configure a backend payment provider before allowing live checkout flows.
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Order Summary */}

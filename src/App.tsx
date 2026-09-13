@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import Layout from './components/Layout'
 
@@ -29,7 +29,7 @@ import AuthCallbackPage from './pages/auth/AuthCallbackPage'
 function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => {
-    window.scrollTo(0, 0)
+   window.scrollTo(0, 0)
   }, [pathname])
   return null
 }
@@ -58,7 +58,7 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignUp />} />
-          <Route path="/login" element={<SignUp />} />
+         <Route path="/login" element={<Navigate to="/signin" replace />} />
           <Route path="/account" element={<Account />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { isAdminEmail } from '../lib/admin'
 import { LogOut, TrendingUp, Users, Calendar, DollarSign, AlertCircle, Loader } from 'lucide-react'
 
 interface DashboardStats {
@@ -56,14 +57,7 @@ export default function AdminDashboard() {
         return
       }
 
-      // Check if user is admin
-      const { data: adminData, error: adminError } = await supabase
-        .from('admins')
-        .select('email')
-        .eq('email', currentUser.email)
-        .single()
-
-      if (adminError || !adminData) {
+      if (!isAdminEmail(currentUser.email)) {
         window.location.href = '/admin/login'
         return
       }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { isAdminEmail } from '../lib/admin'
 import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react'
 
 export default function AdminLogin() {
@@ -9,48 +10,38 @@ export default function AdminLogin() {
   const [error, setError] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+   e.preventDefault()
+   setError('')
+   setLoading(true)
 
-    try {
-      // Sign in with email/password
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+   try {
+     const normalizedEmail = email.trim()
+     if (!isAdminEmail(normalizedEmail)) {
+       setError('You do not have admin access. Add your email to VITE_ADMIN_EMAILS and try again.')
+       return
+     }
 
-      if (signInError) {
-        setError(signInError.message)
-        return
-      }
+     const { data, error: signInError } = await supabase.auth.signInWithPassword({
+       email: normalizedEmail,
+       password,
+     })
 
-      if (!data.user) {
-        setError('Login failed. Please try again.')
-        return
-      }
+     if (signInError) {
+       setError(signInError.message)
+       return
+     }
 
-      // Check if user is an admin
-      const { data: adminData, error: adminError } = await supabase
-        .from('admins')
-        .select('email')
-        .eq('email', email)
-        .single()
+     if (!data.user) {
+       setError('Login failed. Please try again.')
+       return
+     }
 
-      if (adminError || !adminData) {
-        setError('You do not have admin access. Please contact support.')
-        // Sign out if not admin
-        await supabase.auth.signOut()
-        return
-      }
-
-      // Redirect to admin dashboard
-      window.location.href = '/admin/dashboard'
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
+     window.location.href = '/admin/dashboard'
+   } catch (err: any) {
+     setError(err.message || 'An unexpected error occurred')
+   } finally {
+     setLoading(false)
+   }
   }
 
   return (

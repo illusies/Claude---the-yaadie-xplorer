@@ -142,18 +142,25 @@ create policy "Customers can view own bookings"
   to authenticated
   using (auth.uid() = customer_id);
 
--- policy: customers can create bookings for themselves
-create policy "Customers can create bookings"
+-- Customers can create their own draft bookings, but final booking state changes
+-- must be validated by trusted server-side logic and not by client-controlled writes.
+create policy "Customers can create own bookings"
   on bookings for insert
   to authenticated
-  with check (auth.uid() = customer_id);
+  with check (auth.uid() = customer_id and status = 'pending');
 
--- policy: customers can update their own bookings (before payment)
-create policy "Customers can update own pending bookings"
+-- Customers may update only draft booking details, never final payment status.
+create policy "Customers can update own draft bookings"
   on bookings for update
   to authenticated
   using (auth.uid() = customer_id and status = 'pending')
-  with check (auth.uid() = customer_id);
+  with check (auth.uid() = customer_id and status = 'pending');
+
+create policy "Service role can manage bookings"
+  on bookings for all
+  to service_role
+  using (true)
+  with check (true);
 
 -- ============================================================================
 -- TABLE: payments
@@ -192,19 +199,19 @@ create policy "Customers can view own payments"
   to authenticated
   using (auth.uid() = customer_id);
 
--- policy: system can insert payments (for webhook processing)
--- This will be used by edge functions handling payment webhooks
-create policy "System can create payments"
+-- Payment status changes must be performed by trusted backend code or a payment
+-- provider webhook, not by general authenticated client traffic.
+create policy "Service role can create payments"
   on payments for insert
-  to authenticated
-  with check (auth.uid() = customer_id);
+  to service_role
+  with check (true);
 
 -- policy: system can update payments (for webhook processing)
-create policy "System can update payments"
+create policy "Service role can update payments"
   on payments for update
-  to authenticated
-  using (auth.uid() = customer_id)
-  with check (auth.uid() = customer_id);
+  to service_role
+  using (true)
+  with check (true);
 
 -- ============================================================================
 -- TABLE: admins
@@ -218,12 +225,18 @@ create table admins (
 -- enable row level security
 alter table admins enable row level security;
 
--- policy: authenticated users can read the admins table
--- (not a SELECT policy because we don't use row-level checks, just existence)
-create policy "Authenticated can view admins"
+-- Admin membership is confidential; do not expose it to normal authenticated users.
+-- Admin access is checked via a trusted server-side function or service role.
+create policy "No direct admin reads for regular users"
   on admins for select
   to authenticated
-  using (true);
+  using (false);
+
+create policy "Service role can manage admins"
+  on admins for all
+  to service_role
+  using (true)
+  with check (true);
 
 -- seed the site owner as the initial admin
 -- (Replace with the actual owner email: theyaadiexplorer@gmail.com)
